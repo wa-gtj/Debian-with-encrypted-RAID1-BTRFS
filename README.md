@@ -128,7 +128,7 @@ mount -o noatime,compress=zstd,subvol=@/@cache /dev/mapper/sda3_crypt /target/va
 mount /dev/sda1 /target/boot/efi
 ```
 
-### /etc/fstab
+### Edit /etc/fstab
 
 edit fstab according to current mounting
 
@@ -157,17 +157,15 @@ sdb1_crypt UUID= crypt-disks luks,keyscript=decrypt_keyctl,discard
 
 use the correct UUID! The one of the base partition, not the one of the mapped!
 
-#### Installing base system
+## Installing base system
 
-Back to the installer with Ctrl + Alt + F1
+Go back to the installer with Ctrl + Alt + F1.
 
-Continue by installing the base system
+Continue by installing the base system. Wwhen prompted confirm the preselected kernel.
 
-when prompted confirm the preselect kernel
+When prompted for the installation of drivers, I choose to install only the relevant drivers for the target-system, not all generic drivers.
 
-When prompted for the installation of drivers, i choose to install only the relevant drivers for the target-system, not all generic drivers.
-
-configure APT, choose https
+configure APT, choose https.
 
 when an error occures, that you should insert the CDROM labeled "Debian Trixie..." to mount on /media/cdrom, enter busybox again (Ctrl + Alt + F2) and
 
@@ -176,13 +174,17 @@ umount /cdrom
 mount /dev/sr0 /target/media/cdrom
 ```
 
-go back to the installer and continue
+Go back to the installer and continue.
 
-when prompted, choose to install no window manager. Instead, select the ssh-server
+When prompted, choose to install no window manager. Instead, select the ssh-server.
 
-#### Prepare for installation of boot-loader
+## Prepare for installation of boot-loader
+We have renamed the subvolume for the root of the filesystem, but there is still a reference to the old name in some files, which gets written to the bootloader-entry, when the bootloader is updated.
+Not doing this, will prevent the system from booting, until the boot loader entry is edited manually in the busybox.
 
-edit some files, so that update-initramfs writes the correct subvolume for root-filessystem to the \*.conf-files in /boot/efi/loader/entries
+We can circumvent this, by editing some files. After that, update-initramfs writes the correct subvolume for root-filessystem to the \*.conf-files in /boot/efi/loader/entries.
+
+Go to the Terminal again and run the following commands:
 
 ```
 sed -i -e 's/@rootfs/@/g' /etc/kernel/cmdline  
@@ -190,4 +192,11 @@ sed -i -e 's/@rootfs/@/g' /usr/lib/kernel/cmdline
 sed -i -e 's/@rootfs/@/g' /proc/cmdline  
 ```
 
-Install boot-loader systemd-boot
+In my case, the third file contains the correct information and the second doesn't exist, which will result in error messages, which can be ignored.
+
+## Bootloader installation
+We will install "systemd-boot" as bootloader, as grub usually needs a seperate "/boot"-partition.
+
+## Reboot
+Reboot and enjoy!
+
